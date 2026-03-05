@@ -1,9 +1,12 @@
 const express = require('express');
+const axios = require("axios");
+
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
+import axios from "axios";
 
 // Register a new user
 public_users.post("/register", (req, res) => { 
@@ -27,13 +30,24 @@ public_users.post("/register", (req, res) => {
 
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
-	// Send JSON response with formatted friends data
-    res.send(JSON.stringify(books,null,4));
+	// // Send JSON response with formatted friends data
+  //   res.send(JSON.stringify(books,null,4));
+try {
+    const response = await axios.get('http://localhost:5000/books'); 
+    res.status(200).json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching books", error: error.message });
+  }
 });
+
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
-      res.send(books[req.params.isbn])//This line is to be replaced with actual return value;
+  if (books[req.params.isbn]) {
+    res.send(books[req.params.isbn]);
+  } else {
+    return res.status(404).json({message: "Book with ISPN not found"});
+  }
 });
 
 // Get book details based on author
@@ -47,7 +61,7 @@ public_users.get('/author/:author',function (req, res) {
   if (allAuthors.length > 0) {
     res.send(allAuthors);
   } else {
-    return res.status(404).json({message: "Book not found"});
+    return res.status(404).json({message: "Author not found"});
   }
 });
 
@@ -62,7 +76,7 @@ public_users.get('/title/:title',function (req, res) {
   if (allTitles.length > 0) {
     res.send(allTitles);
   } else {
-    return res.status(404).json({message: "Book not found"});
+    return res.status(404).json({message: "Title not found"});
   }   
 }); 
 
@@ -78,5 +92,15 @@ public_users.get('/review/:isbn',function (req, res) {
     return res.status(404).json({message: "Reviews not found"});
   }
 });
+
+
+axios.get("http://localhost:5000/")
+  .then(res => console.log(res.data))
+  .catch(err => console.error(err));
+
+axios.get("http://localhost:5000/isbn/1")
+  .then(res => console.log(res.data))
+  .catch(err => console.error(err));
+
 
 module.exports.general = public_users;
